@@ -105,7 +105,7 @@ export const getLanguageId = (srcPath: string): number => {
     const extension = path.extname(srcPath);
     let compiler = null;
     switch (extension) {
-        case '.cpp': {
+        case '.cc': {
             compiler = getPreference('language.cpp.SubmissionCompiler');
             break;
         }

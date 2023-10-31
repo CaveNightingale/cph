@@ -5,18 +5,16 @@ import { saveProblem } from './parser';
 import * as vscode from 'vscode';
 import path from 'path';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
-import { isCodeforcesUrl, randomId } from './utils';
+import { randomId } from './utils';
 import {
     getDefaultLangPref,
     getLanguageId,
-    useShortCodeForcesName,
     getMenuChoices,
     getDefaultLanguageTemplateFileLocation,
 } from './preferences';
 import { getProblemName } from './submit';
 import { spawn } from 'child_process';
 import { getJudgeViewProvider } from './extension';
-import { words_in_text } from './utilsPure';
 
 const emptyResponse: CphEmptyResponse = { empty: true };
 let savedResponse: CphEmptyResponse | CphSubmitResponse = emptyResponse;
@@ -138,22 +136,42 @@ export const setupCompanionServer = () => {
     }
 };
 
-export const getProblemFileName = (problem: Problem, ext: string) => {
-    if (isCodeforcesUrl(new URL(problem.url)) && useShortCodeForcesName()) {
-        return `${getProblemName(problem.url)}.${ext}`;
-    } else {
-        console.log(
-            isCodeforcesUrl(new URL(problem.url)),
-            useShortCodeForcesName(),
-        );
+const ONLINE_JUDGE_URLS: [string, RegExp][] = [
+    ['cf', /^https:\/\/codeforces.com\/contest\/(\d+)\/problem\/(\S+)$/],
+    ['cf', /^https:\/\/codeforces.com\/problemset\/problem\/(\d+)\/(\S+)$/],
+    ['cf', /^https:\/\/codeforces.com\/gym\/(\d+)\/problem\/(\S+)$/],
+    ['atc', /^https:\/\/atcoder.jp\/contests\/(\S+)\/tasks\/\S+_(\S+)$/],
+    ['nc', /^https:\/\/ac.nowcoder.com\/acm\/contest\/(\S+)\/(\S+)$/],
+    ['vjudge', /^https:\/\/vjudge.net\/contest\/(\S+)#problem\/(\S+)$/],
+    ['vjudge', /^https:\/\/vjudge.net\/problem\/(\S+)\/(\S+)$/],
+];
 
-        const words = words_in_text(problem.name);
-        if (words === null) {
-            return `${problem.name.replace(/\W+/g, '_')}.${ext}`;
-        } else {
-            return `${words.join('_')}.${ext}`;
+const LUOGU_URL = /^https:\/\/www.luogu.com.cn\/problem\/(\S+)/;
+
+export const getProblemFileName = (problem: Problem, ext: string) => {
+    const parseUrl = (url: string, oj: string, re: RegExp) => {
+        const match = url.match(re);
+        if (match == null) {
+            return '';
+        }
+        return oj + '-' + match[1] + '-' + match[2]; // oj-contest-problem
+    };
+    const url = problem.url;
+    for (const [oj, re] of ONLINE_JUDGE_URLS) {
+        const name = parseUrl(url, oj, re);
+        if (name) {
+            return name.toLowerCase() + '.' + ext;
         }
     }
+    // Deal with LuoGu, it has no contest number.
+    if (url.match(LUOGU_URL)) {
+        const match = url.match(LUOGU_URL);
+        if (match) {
+            return 'lg-' + match[1].split('?', 2)[0].toLowerCase() + '.' + ext;
+        }
+    }
+    // No match, use problem name. Actually, Kattis doesn't provide problem letter so we have no choice.
+    return problem.name.replace(/\s/g, '-') + '.' + ext;
 };
 
 /** Handle the `problem` sent by Competitive Companion, such as showing the webview, opening an editor, managing layout etc. */

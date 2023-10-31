@@ -8,7 +8,7 @@ export default {
     timeout: 10000, // for a testcase run
     extensions: {
         c: 'c',
-        cpp: 'cpp',
+        cpp: 'cc',
         python: 'py',
         rust: 'rs',
         java: 'java',
@@ -41,6 +41,6 @@ export default {
         'Go 1.19.5': 32,
         'Rust 1.66.0 (2021)': 75,
     },
-    supportedExtensions: ['py', 'cpp', 'rs', 'c', 'java', 'go'],
+    supportedExtensions: ['py', 'cc', 'rs', 'c', 'java', 'go'],
     skipCompile: ['py'],
 };

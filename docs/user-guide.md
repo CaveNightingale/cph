@@ -30,7 +30,7 @@ actions remain the same.
 
 ## Using with your own problems
 
-1. Write some code in any supported language ( .cpp, .c, .rs, .python).
+1. Write some code in any supported language ( .cc .c, .rs, .python).
 
 1. Launch the extension: Press `Ctrl+Alt+B` to run them. Or, use the 'Run
    Testcases' button from the activity bar ( in the bottom).
